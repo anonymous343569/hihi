@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday My Addu!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Dancing+Script:wght@600&display=swap');
+
+        :root {
+            --primary: #ec4899;
+            --secondary: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            background-color: black;
+            touch-action: manipulation;
+        }
+
+        /* --- Layout & Transitions --- */
+        .screen {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        /* --- Countdown --- */
+        @keyframes spin-slow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner-ring {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #ec4899;
+            border-right-color: #a855f7;
+            animation: spin-slow 3s linear infinite;
+            position: absolute;
+        }
+
+        .spinner-ring::before {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #f472b6;
+            border-left-color: #c084fc;
+            animation: spin-slow 2s linear infinite reverse;
+        }
+
+        /* --- Robust Cake System --- */
+        .cake-stage {
+            width: 300px;
+            height: 300px;
+            position: relative;
+        }
+
+        .cake-body {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            width: 200px;
+            height: 120px;
+            background: #fbcfe8;
+            border-radius: 10px 10px 100px 100px;
+            box-shadow: inset -10px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .cake-frosting {
+            position: absolute;
+            bottom: 140px;
+            left: 45px;
+            width: 210px;
+            height: 50px;
+            background: #fdf2f8;
+            border-radius: 50px;
+            z-index: 12;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .cake-drip {
+            position: absolute;
+            background: #fdf2f8;
+            width: 20px;
+            height: 40px;
+            border-radius: 0 0 20px 20px;
+            z-index: 11;
+            top: 170px;
+        }
+
+        .candle-slot {
+            position: absolute;
+            bottom: 170px;
+            width: 12px;
+            height: 50px;
+            background: repeating-linear-gradient(45deg, #fff, #fff 5px, #38bdf8 5px, #38bdf8 10px);
+            border-radius: 4px;
+            z-index: 15;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .flame {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 16px;
+            height: 24px;
+            background: radial-gradient(circle at 50% 80%, #fcd34d, #ef4444);
+            border-radius: 50% 50% 20% 20%;
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .flame.lit {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            animation: flicker 0.8s infinite alternate;
+            box-shadow: 0 0 20px #fbbf24;
+        }
+
+        @keyframes flicker {
+            0% {
+                transform: translateX(-50%) scale(1);
+            }
+
+            100% {
+                transform: translateX(-50%) scale(1.1) rotate(2deg);
+            }
+        }
+
+        /* --- Balloon Game --- */
+        .balloon-wrapper {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .balloon-wrapper:active {
+            transform: scale(0.95);
+        }
+
+        .balloon-body {
+            width: 70px;
+            height: 85px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 20%),
+                linear-gradient(135deg, #a855f7, #7c3aed);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .balloon-string {
+            width: 2px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.5);
+            margin-top: -5px;
+        }
+
+        .balloon-wrapper.popped {
+            animation: pop-vanish 0.3s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes pop-vanish {
+            to {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* --- Memories Swipe & Pop --- */
+        .memory-container {
+            position: relative;
+            width: 280px;
+            height: 400px;
+            perspective: 1000px;
+        }
+
+        .memory-card {
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
+            overflow: hidden;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid white;
+        }
+
+        .memory-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .memory-card:active {
+            cursor: grabbing;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .lightbox.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .lightbox.open img {
+            transform: scale(1);
+        }
+
+        /* --- Emotional Message Card --- */
+        .letter-container {
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            padding: 2rem;
+            padding-top: 5rem;
+            /* Increased top spacing */
+            border-radius: 2px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform-style: preserve-3d;
+            background-image: linear-gradient(#eee .1rem, transparent .1rem);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+        }
+
+        .letter-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+        }
+
+        .handwritten {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.5rem;
+            color: #374151;
+        }
+
+        /* --- Mobile Optimizations --- */
+        @media (max-width: 640px) {
+            .cake-stage {
+                transform: scale(0.85);
+            }
+
+            .memory-container {
+                width: 260px;
+                height: 380px;
+            }
+
+            .letter-container {
+                padding: 1.5rem;
+                padding-top: 4rem;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-white antialiased select-none">
+
+    <!-- Background -->
+    <div class="fixed inset-0 z-[-1] bg-black">
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-purple-950 to-slate-900"></div>
+        <div id="stars"></div>
+    </div>
+
+    <!-- SCREEN 1: COUNTDOWN -->
+    <div id="screen-countdown" class="screen active">
+        <div class="relative flex flex-col items-center justify-center">
+            <div class="relative w-[200px] h-[200px] flex items-center justify-center mb-12">
+                <div class="spinner-ring"></div>
+                <div id="countdown-val"
+                    class="text-8xl font-black text-white drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]">3</div>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-light tracking-widest text-pink-200 animate-pulse text-center px-4">
+                MAKING IT SPECIAL...
+            </h1>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: INTRO -->
+    <div id="screen-intro" class="screen">
+        <div class="flex flex-col items-center">
+            <!-- Cute Bear Icon -->
+            <div
+                class="w-32 h-32 bg-pink-100 rounded-full relative mb-6 flex items-center justify-center shadow-[0_0_40px_rgba(236,72,153,0.4)] animate-bounce-slow">
+                <div class="absolute -top-2 -left-2 w-10 h-10 bg-pink-200 rounded-full -z-10"></div>
+                <div class="absolute -top-2 -right-2 w-10 h-10 bg-pink-200 rounded-full -z-10"></div>
+                <div class="flex gap-4">
+                    <div class="w-3 h-4 bg-gray-800 rounded-full"></div>
+                    <div class="w-3 h-4 bg-gray-800 rounded-full"></div>
+                </div>
+                <div class="absolute top-16 w-4 h-3 bg-pink-400 rounded-full"></div>
+                <div class="absolute top-20 w-8 h-4 border-b-2 border-gray-400 rounded-full"></div>
+            </div>
+
+            <h1
+                class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300 mb-4 text-center">
+                Happy Birthday!
+            </h1>
+            <p class="text-gray-400 mb-10 text-center px-6">
+                A little world created just for you.
+            </p>
+            <button onclick="nav('screen-cake')"
+                class="px-10 py-3 bg-white text-purple-900 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">
+                Enter Surprise ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: CAKE -->
+    <div id="screen-cake" class="screen">
+        <h2 class="text-3xl font-bold text-pink-200 mb-4 opacity-0 transition-opacity duration-1000" id="cake-title">
+            Make a Wish!</h2>
+
+        <div class="cake-stage">
+            <div id="cake-decorations-layer" class="absolute inset-0 z-20 pointer-events-none"></div>
+            <div class="candle-slot" style="left: 100px;">
+                <div class="flame" id="flame-1"></div>
+            </div>
+            <div class="candle-slot" style="left: 144px; bottom: 180px; z-index: 16;">
+                <div class="flame" id="flame-2"></div>
+            </div>
+            <div class="candle-slot" style="left: 188px;">
+                <div class="flame" id="flame-3"></div>
+            </div>
+            <div class="cake-frosting"></div>
+            <div class="cake-body"></div>
+            <div class="cake-drip" style="left: 70px;"></div>
+            <div class="cake-drip" style="left: 120px; height: 30px;"></div>
+            <div class="cake-drip" style="left: 180px;"></div>
+            <div class="cake-drip" style="left: 220px; height: 25px;"></div>
+        </div>
+
+        <div class="mt-12 flex flex-col gap-4 z-30 min-h-[100px]">
+            <button id="btn-decorate" onclick="doDecorate()"
+                class="px-8 py-3 bg-pink-600 rounded-full font-semibold shadow-lg text-white">
+                🍓 Add Toppings
+            </button>
+            <button id="btn-light" onclick="doLight()"
+                class="hidden px-8 py-3 bg-orange-500 rounded-full font-semibold shadow-lg text-white">
+                🔥 Light Candles
+            </button>
+            <button id="btn-next-balloons" onclick="nav('screen-balloons')"
+                class="hidden px-8 py-3 bg-purple-600 rounded-full font-semibold shadow-lg text-white">
+                🎈 Next Surprise
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: BALLOONS -->
+    <div id="screen-balloons" class="screen">
+        <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 px-4">Pop the Balloons!</h2>
+        <p class="text-gray-400 text-sm mb-8">Find the secret message inside.</p>
+
+        <div id="balloon-area"
+            class="relative w-full max-w-md h-[400px] border-2 border-white/5 rounded-xl bg-white/5 mb-8 overflow-hidden">
+            <!-- Balloons injected here -->
+        </div>
+
+        <div id="secret-msg-container" class="h-12 flex gap-3 justify-center items-center">
+            <!-- Words injected here -->
+        </div>
+
+        <button id="btn-memories" onclick="nav('screen-memories')"
+            class="hidden mt-8 px-8 py-3 bg-green-600 rounded-full font-semibold shadow-lg hover:bg-green-500 transition-colors">
+            See Memories 📸
+        </button>
+    </div>
+
+    <!-- SCREEN 5: MEMORIES -->
+    <div id="screen-memories" class="screen">
+        <h2 class="text-3xl font-bold text-pink-200 mb-2">Our Moments</h2>
+        <p class="text-white/50 text-sm mb-8">Swipe to swap</p>
+
+        <div class="memory-container" id="memory-stack">
+            <!-- Cards injected via JS -->
+        </div>
+
+        <button onclick="nav('screen-message')"
+            class="mt-12 px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full font-bold shadow-lg">
+            💌 Read Letter
+        </button>
+    </div>
+
+    <!-- SCREEN 6: EMOTIONAL MESSAGE -->
+    <div id="screen-message" class="screen overflow-y-auto">
+        <div class="w-full min-h-full flex flex-col items-center justify-center py-10">
+            <h2 class="text-2xl font-bold text-white mb-6">A Letter for You</h2>
+
+            <div class="letter-container handwritten">
+                <p class="mb-4 text-pink-600 font-bold text-2xl"><br>My Dear Addu,</p>
+                <p class="mb-4">
+                    As I sit down to write this, I realize that words might not be enough to describe just how special
+                    you are. Today isn't just about the day you were born; it's a celebration of the incredible light
+                    you bring into this world.
+                </p>
+                <p class="mb-4">
+                    Watching you grow, seeing you smile, and witnessing the kindness you show to everyone around you is
+                    a gift I cherish every single day. You have a heart of gold and a spirit that shines brighter than
+                    any star in the sky.
+                </p>
+                <p class="mb-4">
+                    Life will have its ups and downs, but I want you to know that you are strong, you are loved, and you
+                    are never alone. May this year bring you as much happiness as you give to others.
+                </p>
+                <p class="mt-8 text-right">
+                    Forever cheering for you,<br>
+                    <span class="text-purple-600 font-bold text-xl">Your Secret Admirer ❤️</span>
+                </p>
+            </div>
+
+            <button onclick="nav('screen-final')"
+                class="mt-10 px-8 py-3 bg-white text-pink-600 rounded-full font-bold shadow-lg hover:bg-gray-100">
+                One Last Gift 🎁
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 7: FINAL -->
+    <div id="screen-final" class="screen">
+        <div class="text-center">
+            <div class="text-9xl mb-4 animate-pulse">❤️</div>
+            <h2 class="text-4xl font-bold text-pink-400 mb-2">Happy Birthday!</h2>
+            <p class="text-white/60 mb-8">You are the best.</p>
+            <button onclick="location.reload()"
+                class="px-6 py-2 border border-white/30 rounded-full text-sm hover:bg-white hover:text-black transition-colors">
+                Replay Surprise
+            </button>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Full size memory">
+    </div>
+
+    <script>
+        // --- Star Background ---
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const s = document.createElement('div');
+            s.className = 'absolute bg-white rounded-full opacity-0 animate-pulse';
+            s.style.width = Math.random() * 2 + 'px';
+            s.style.height = s.style.width;
+            s.style.left = Math.random() * 100 + '%';
+            s.style.top = Math.random() * 100 + '%';
+            s.style.animationDuration = Math.random() * 3 + 2 + 's';
+            s.style.animationDelay = Math.random() * 5 + 's';
+            starsContainer.appendChild(s);
+        }
+
+        // --- Navigation ---
+        function nav(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            if (id === 'screen-balloons') setupBalloons();
+            if (id === 'screen-memories') initMemories();
+            if (id === 'screen-final') confettiBomb();
+        }
+
+        // --- Countdown Logic ---
+        function startCountdown() {
+            let count = 3;
+            const el = document.getElementById('countdown-val');
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    el.innerText = count;
+                } else {
+                    clearInterval(timer);
+                    nav('screen-intro');
+                }
+            }, 1000);
+        }
+        window.onload = startCountdown;
+
+        // --- Cake Logic ---
+        function doDecorate() {
+            const layer = document.getElementById('cake-decorations-layer');
+            const items = ['🍓', '🍬', '🍒', '🍪', '🍫'];
+            for (let i = 0; i < 12; i++) {
+                const el = document.createElement('div');
+                el.innerText = items[Math.floor(Math.random() * items.length)];
+                el.style.position = 'absolute';
+                el.style.fontSize = '1.2rem';
+                el.style.zIndex = '13';
+                const x = Math.random() * 170 + 60;
+                const yFromBottom = Math.random() * 30 + 145;
+                el.style.left = x + 'px';
+                el.style.bottom = yFromBottom + 'px';
+                el.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+                layer.appendChild(el);
+            }
+            document.getElementById('btn-decorate').classList.add('hidden');
+            document.getElementById('btn-light').classList.remove('hidden');
+        }
+
+        function doLight() {
+            document.getElementById('flame-1').classList.add('lit');
+            setTimeout(() => document.getElementById('flame-2').classList.add('lit'), 300);
+            setTimeout(() => document.getElementById('flame-3').classList.add('lit'), 600);
+            document.getElementById('cake-title').style.opacity = 1;
+            document.getElementById('btn-light').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('btn-next-balloons').classList.remove('hidden');
+            }, 1000);
+        }
+
+        // --- Balloon Logic ---
+        const SECRET_WORDS = ["YOU", "ARE", "A", "CUTIE"];
+        let poppedCount = 0;
+
+        function setupBalloons() {
+            const area = document.getElementById('balloon-area');
+            const msgContainer = document.getElementById('secret-msg-container');
+            area.innerHTML = '';
+            msgContainer.innerHTML = '';
+            poppedCount = 0;
+
+            SECRET_WORDS.forEach(word => {
+                const p = document.createElement('div');
+                p.className = 'text-xl font-bold text-pink-400 opacity-20 transition-all duration-500';
+                p.innerText = '???';
+                msgContainer.appendChild(p);
+            });
+
+            const positions = [
+                { x: 20, y: 10 }, { x: 70, y: 20 }, { x: 30, y: 50 }, { x: 60, y: 60 }
+            ];
+
+            SECRET_WORDS.forEach((word, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'balloon-wrapper';
+                wrap.style.left = positions[idx].x + '%';
+                wrap.style.top = positions[idx].y + '%';
+
+                wrap.innerHTML = `
+                    <div class="balloon-body">${idx + 1}</div>
+                    <div class="balloon-string"></div>
+                `;
+
+                wrap.onclick = () => {
+                    if (wrap.classList.contains('popped')) return;
+                    wrap.classList.add('popped');
+
+                    const wordEls = msgContainer.children;
+                    wordEls[idx].innerText = word;
+                    wordEls[idx].classList.remove('opacity-20');
+                    wordEls[idx].classList.add('opacity-100', 'scale-110');
+
+                    poppedCount++;
+                    if (poppedCount === SECRET_WORDS.length) {
+                        document.getElementById('btn-memories').classList.remove('hidden');
+                    }
+                };
+                area.appendChild(wrap);
+            });
+        }
+
+        // --- Memories Logic (Swipe & Lightbox) ---
+        const MEMORY_IMGS = [
+            '1.jpeg',
+            '2.jpeg',
+            '3.jpeg',
+            '4.jpeg',
+        ];
+
+        function initMemories() {
+            const container = document.getElementById('memory-stack');
+            container.innerHTML = '';
+            MEMORY_IMGS.forEach((url, i) => {
+                const card = createCard(url, i);
+                container.appendChild(card);
+            });
+            updateStackVisuals();
+        }
+
+        function createCard(url, index) {
+            const el = document.createElement('div');
+            el.className = 'memory-card';
+            el.innerHTML = `<img src="${url}" draggable="false">`;
+
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            let startTime = 0;
+
+            // Mouse/Touch Events
+            const startDrag = (x) => {
+                if (index !== 0) return;
+                startX = x;
+                currentX = x; // FIX: Initialize currentX
+                isDragging = true;
+                startTime = new Date().getTime();
+                el.style.transition = 'none';
+            };
+
+            const moveDrag = (x) => {
+                if (!isDragging) return;
+                currentX = x;
+                const diff = currentX - startX;
+                const rot = diff / 10;
+                el.style.transform = `translateX(${diff}px) rotate(${rot}deg)`;
+            };
+
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                el.style.transition = 'transform 0.5s ease, opacity 0.5s';
+
+                const diff = currentX - startX;
+                const timeDiff = new Date().getTime() - startTime;
+
+                // Check for tap (short time, small movement)
+                if (timeDiff < 300 && Math.abs(diff) < 10) {
+                    openLightbox(url);
+                    // Reset position
+                    el.style.transform = `translateY(0) scale(1)`;
+                    return;
+                }
+
+                // Check for swipe
+                if (Math.abs(diff) > 100) {
+                    const dir = diff > 0 ? 1 : -1;
+                    el.style.transform = `translateX(${dir * 500}px) rotate(${dir * 30}deg)`;
+                    el.style.opacity = '0';
+                    setTimeout(() => {
+                        el.remove();
+                        MEMORY_IMGS.push(MEMORY_IMGS.shift());
+                        initMemories();
+                    }, 300);
+                } else {
+                    updateStackVisuals();
+                }
+            };
+
+            el.addEventListener('mousedown', e => startDrag(e.clientX));
+            window.addEventListener('mousemove', e => moveDrag(e.clientX));
+            window.addEventListener('mouseup', endDrag);
+
+            el.addEventListener('touchstart', e => startDrag(e.touches[0].clientX));
+            el.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX));
+            el.addEventListener('touchend', endDrag);
+
+            return el;
+        }
+
+        function updateStackVisuals() {
+            const cards = document.querySelectorAll('.memory-card');
+            cards.forEach((card, i) => {
+                card.style.zIndex = cards.length - i;
+                const scale = 1 - (i * 0.05);
+                const y = i * 10;
+                card.style.transform = `translateY(${y}px) scale(${scale})`;
+                card.style.opacity = i > 2 ? 0 : 1;
+            });
+        }
+
+        // Lightbox
+        function openLightbox(url) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            lb.classList.add('open');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('open');
+        }
+
+        // Confetti
+        function confettiBomb() {
+            const colors = ['#ec4899', '#8b5cf6', '#f59e0b', '#10b981'];
+            for (let i = 0; i < 100; i++) {
+                const c = document.createElement('div');
+                c.style.position = 'fixed';
+                c.style.width = '10px';
+                c.style.height = '10px';
+                c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                c.style.left = '50%';
+                c.style.top = '50%';
+                c.style.borderRadius = '50%';
+                c.style.pointerEvents = 'none';
+                c.style.zIndex = '100';
+                document.body.appendChild(c);
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 10 + 5;
+                const tx = Math.cos(angle) * velocity * 20;
+                const ty = Math.sin(angle) * velocity * 20;
+
+                c.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0, .9, .57, 1)',
+                    fill: 'forwards'
+                });
+            }
+        }
+
+    </script>
+</body>
+
+</html>
